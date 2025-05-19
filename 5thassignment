@@ -1,0 +1,60 @@
+class Smartphone:
+    def __init__(self, brand, model, storage_gb):
+        self.brand = brand
+        self.model = model
+        self.__storage_gb = storage_gb  # private attribute (encapsulation)
+
+    def get_storage(self):
+        return self.__storage_gb
+
+    def use_storage(self, amount):
+        if amount <= self.__storage_gb:
+            self.__storage_gb -= amount
+            print(f"Used {amount}GB storage. Remaining: {self.__storage_gb}GB")
+        else:
+            print("Not enough storage!")
+
+    def phone_info(self):
+        print(f"Brand: {self.brand}, Model: {self.model}, Storage: {self.__storage_gb}GB")
+
+# Inheritance example: Smartphone -> GamingPhone
+class GamingPhone(Smartphone):
+    def __init__(self, brand, model, storage_gb, gpu_power):
+        super().__init__(brand, model, storage_gb)
+        self.gpu_power = gpu_power  # extra attribute
+
+    def phone_info(self):
+        super().phone_info()
+        print(f"GPU Power: {self.gpu_power}")
+
+# Example Usage:
+phone = Smartphone("Apple", "iPhone 14", 128)
+phone.phone_info()
+phone.use_storage(20)
+phone.use_storage(120)  # tries to use more than remaining storage
+
+gaming_phone = GamingPhone("ASUS", "ROG Phone 5", 256, "High-end")
+gaming_phone.phone_info()
+
+
+class Animal:
+    def move(self):
+        print("Moving in some way")
+
+class Dog(Animal):
+    def move(self):
+        print("Running 🐕")
+
+class Bird(Animal):
+    def move(self):
+        print("Flying 🐦")
+
+class Fish(Animal):
+    def move(self):
+        print("Swimming 🐟")
+
+# Demonstrating polymorphism
+animals = [Dog(), Bird(), Fish()]
+
+for animal in animals:
+    animal.move()
