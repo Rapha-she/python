@@ -1,0 +1,130 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+def load_dataset(file_path):
+    """Load CSV file with error handling."""
+    try:
+        df = pd.read_csv(file_path)
+        print("Dataset loaded successfully.\n")
+        return df
+    except FileNotFoundError:
+        print(f"Error: File '{file_path}' not found.")
+        return None
+    except pd.errors.EmptyDataError:
+        print("Error: File is empty.")
+        return None
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
+
+def explore_data(df):
+    """Display data head, info, and missing values."""
+    print("First 5 rows:\n", df.head(), "\n")
+    print("Dataset info:")
+    df.info()
+    print("\nMissing values per column:\n", df.isnull().sum(), "\n")
+
+def clean_data(df):
+    """Clean data by filling or dropping missing values."""
+    if df.isnull().sum().sum() > 0:
+        print("Cleaning missing values...")
+        # Example: fill numeric columns with mean, categorical with mode
+        for col in df.columns:
+            if df[col].isnull().any():
+                if df[col].dtype in ['float64', 'int64']:
+                    df[col].fillna(df[col].mean(), inplace=True)
+                else:
+                    df[col].fillna(df[col].mode()[0], inplace=True)
+        print("Missing values handled.\n")
+    else:
+        print("No missing values detected.\n")
+    return df
+
+def basic_analysis(df, categorical_col, numeric_col):
+    """Perform basic statistical analysis and grouping."""
+    print("Basic statistics of numerical columns:\n", df.describe(), "\n")
+    
+    if categorical_col in df.columns and numeric_col in df.columns:
+        grouped = df.groupby(categorical_col)[numeric_col].mean()
+        print(f"Mean of '{numeric_col}' grouped by '{categorical_col}':\n{grouped}\n")
+        return grouped
+    else:
+        print(f"Columns '{categorical_col}' or '{numeric_col}' not found in dataframe.")
+        return None
+
+def create_visualizations(df, categorical_col):
+    """Create 4 types of plots with customization."""
+    
+    # 1. Line Chart (If time series data exists, use it; otherwise use example)
+    if 'date' in df.columns:
+        df['date'] = pd.to_datetime(df['date'])
+        df_sorted = df.sort_values('date')
+        plt.figure(figsize=(10,5))
+        plt.plot(df_sorted['date'], df_sorted[df.columns[1]])
+        plt.title('Line Chart of '+df.columns[1]+' over time')
+        plt.xlabel('Date')
+        plt.ylabel(df.columns[1])
+        plt.grid(True)
+        plt.show()
+    else:
+        # Fallback example: Line chart of mean numeric by category
+        if categorical_col in df.columns:
+            means = df.groupby(categorical_col).mean().iloc[:,0]
+            means.plot(kind='line', marker='o')
+            plt.title(f'Mean {means.name} by {categorical_col} (Line Chart)')
+            plt.xlabel(categorical_col)
+            plt.ylabel(f'Mean {means.name}')
+            plt.grid(True)
+            plt.show()
+    
+    # 2. Bar Chart: Average numeric value per category
+    if categorical_col in df.columns:
+        plt.figure(figsize=(8,5))
+        sns.barplot(x=categorical_col, y=df.select_dtypes(include=['number']).columns[0], data=df)
+        plt.title(f'Average {df.select_dtypes(include=["number"]).columns[0]} per {categorical_col} (Bar Chart)')
+        plt.xlabel(categorical_col)
+        plt.ylabel(f'Average {df.select_dtypes(include=["number"]).columns[0]}')
+        plt.show()
+    
+    # 3. Histogram of first numeric column
+    num_col = df.select_dtypes(include=['number']).columns[0]
+    plt.figure(figsize=(8,5))
+    plt.hist(df[num_col], bins=20, color='skyblue', edgecolor='black')
+    plt.title(f'Distribution of {num_col} (Histogram)')
+    plt.xlabel(num_col)
+    plt.ylabel('Frequency')
+    plt.show()
+    
+    # 4. Scatter plot between first two numeric columns
+    numeric_cols = df.select_dtypes(include=['number']).columns
+    if len(numeric_cols) >= 2:
+        plt.figure(figsize=(8,6))
+        sns.scatterplot(x=numeric_cols[0], y=numeric_cols[1], hue=categorical_col if categorical_col in df.columns else None, data=df)
+        plt.title(f'Scatter Plot: {numeric_cols[0]} vs {numeric_cols[1]}')
+        plt.xlabel(numeric_cols[0])
+        plt.ylabel(numeric_cols[1])
+        plt.legend(title=categorical_col if categorical_col in df.columns else '')
+        plt.show()
+    else:
+        print("Not enough numeric columns for scatter plot.")
+
+def main():
+    # Replace with your CSV file path or URL
+    dataset_path = "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv"
+    df = load_dataset(dataset_path)
+    if df is None:
+        return
+    
+    explore_data(df)
+    df = clean_data(df)
+    
+    # Choose columns for grouping and analysis
+    categorical_col = 'species'
+    numeric_col = 'sepal_length'
+    
+    basic_analysis(df, categorical_col, numeric_col)
+    create_visualizations(df, categorical_col)
+
+if __name__ == "__main__":
+    main()
